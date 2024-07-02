@@ -38,7 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   if (guiObject.cameraType === "PerspectiveCamera") {
     camera = new THREE.PerspectiveCamera(
-      48,
+      53,
       window.innerWidth / window.innerHeight,
       0.1,
       1000
@@ -243,7 +243,7 @@ document.addEventListener("DOMContentLoaded", () => {
     .onChange((value) => {
       if (value === "PerspectiveCamera") {
         camera = new THREE.PerspectiveCamera(
-          48,
+          53,
           window.innerWidth / window.innerHeight,
           0.1,
           1000
