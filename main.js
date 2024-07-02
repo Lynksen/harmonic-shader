@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
     order: 2,
     degree: 4,
     lineWidth: 1.6,
-    lineCount: 16,
+    lineCount: 24,
     lineMultiplier: 15,
     color2: "#000",
     color1: "#f7f6f3",
