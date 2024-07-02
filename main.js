@@ -249,7 +249,8 @@ document.addEventListener("DOMContentLoaded", () => {
           1000
         );
         camera.position.z = 6;
-        camera.aspect = window.innerWidth / window.innerHeight;
+        // camera.aspect = window.innerWidth / window.innerHeight;
+        camera.aspect = 1.767;
         camera.updateProjectionMatrix();
         controls.dispose();
         controls = new OrbitControls(camera, renderer.domElement);
