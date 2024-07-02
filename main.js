@@ -13,13 +13,13 @@ document.addEventListener("DOMContentLoaded", () => {
     order: 2,
     degree: 4,
     lineWidth: 1.6,
-    lineCount: 15,
+    lineCount: 16,
     lineMultiplier: 15,
     color2: "#000",
     color1: "#f7f6f3",
-    easing: 0,
-    cameraType:
-      query.get("camera") == "p" ? "PerspectiveCamera" : "OrthographicCamera",
+    easing: "sineIn",
+    cameraType: "PerspectiveCamera",
+    //   query.get("camera") == "p" ? "PerspectiveCamera" : "OrthographicCamera",
   };
   let guiFov = null;
   // create basic scene
@@ -38,13 +38,13 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   if (guiObject.cameraType === "PerspectiveCamera") {
     camera = new THREE.PerspectiveCamera(
-      40,
+      51,
       window.innerWidth / window.innerHeight,
       0.1,
       1000
     );
   }
-  camera.position.z = 6;
+  camera.position.z = 5.16;
   const renderer = new THREE.WebGLRenderer({
     antialias: false,
   });
@@ -243,7 +243,7 @@ document.addEventListener("DOMContentLoaded", () => {
     .onChange((value) => {
       if (value === "PerspectiveCamera") {
         camera = new THREE.PerspectiveCamera(
-          40,
+          43,
           window.innerWidth / window.innerHeight,
           0.1,
           1000
