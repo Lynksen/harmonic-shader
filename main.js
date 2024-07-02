@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
     lineCount: 15,
     lineMultiplier: 15,
     color2: "#000",
-    color1: "#f8f6f3",
+    color1: "#f7f6f3",
     easing: 0,
     cameraType:
       query.get("camera") == "p" ? "PerspectiveCamera" : "OrthographicCamera",
@@ -113,10 +113,10 @@ document.addEventListener("DOMContentLoaded", () => {
   scene.add(outline);
 
   // add light
-  const ambientLight = new THREE.AmbientLight(0xffffff, 3);
+  const ambientLight = new THREE.AmbientLight(0xf7f6f3, 3);
   scene.add(ambientLight);
 
-  const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
+  const directionalLight = new THREE.DirectionalLight(0xf7f6f3, 1.5);
   directionalLight.position.set(0, 0, 10);
   directionalLight.visible = true;
   scene.add(directionalLight);
