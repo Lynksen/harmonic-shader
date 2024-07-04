@@ -38,6 +38,26 @@
                 height: 100vh;
                 z-index: 0;
                 background-color: transparent;
+                cursor: none;
+            }
+            #canvas:hover ~ #cursor {
+                opacity: 1;
+            }
+            #cursor {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 20px;
+                height: 20px;
+                background-color: #000;
+                border-radius: 50%;
+                pointer-events: none;
+                z-index: 2;
+                opacity: 0;
+                transition:
+                    0.3s ease-in-out opacity,
+                    0.3s ease-in-out transform;
+                filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.5)) blur(2px);
             }
         </style>
     </head>
@@ -45,6 +65,8 @@
         <div class="test">Spherical harmonics 𝞧</div>
 
         <canvas id="canvas"></canvas>
+
+        <div id="cursor"></div>
 
         <script type="x-shader/x-vertex" id="vertexShader">
             uniform float uTime;
@@ -89,6 +111,7 @@
             uniform float uRotation;
             uniform float uOffsetX;
             uniform float uOffsetY;
+            uniform float uEnableMouse;
 
 
             #define SQRT2PI 2.506628274631
@@ -198,6 +221,9 @@
                 vec2 uv = vUv;
                 vec3 norm = vNormale;
                 norm.y += uOffsetY * 0.01;
+                if(uEnableMouse == 1.0) {
+                    norm.y += -uMouse.y;
+                }
                 vec3 n = normalize(norm);
                 vec3 color = uColor1;
                 float time = uTime;
@@ -215,7 +241,11 @@
 
                 // compute spherical harmonics
                 vec2 sh1 = sphere_harm(theta, phi, degree, order);
-                sh1 = rotate2d(sh1, uOffsetX);
+                float off = uOffsetX;
+                if(uEnableMouse == 1.0) {
+                    off += uMouse.x;
+                }
+                sh1 = rotate2d(sh1, off);
 
 
                 float r = length(sh1); // convert from Cartesian to Polar coordinates

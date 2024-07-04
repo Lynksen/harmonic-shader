@@ -10,7 +10,7 @@ import { FXAAShader } from "three/addons/shaders/FXAAShader.js";
 
 document.addEventListener("DOMContentLoaded", () => {
     // create gui
-    const gui = new GUI();
+    const gui = new GUI({});
     // create URLSearchParams object
     const guiObject = {
         timeSpeed: 0.01,
@@ -27,6 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
         rotation: Math.PI / 2,
         offsetX: 0,
         offsetY: 0,
+        enableMouse: 0,
     };
     // create basic scene
     let camera = null;
@@ -126,6 +127,7 @@ document.addEventListener("DOMContentLoaded", () => {
             uRadius: new THREE.Uniform(guiObject.radius),
             uOffsetX: new THREE.Uniform(guiObject.offsetX),
             uOffsetY: new THREE.Uniform(guiObject.offsetY),
+            uEnableMouse: new THREE.Uniform(guiObject.enableMouse),
         },
         side: THREE.DoubleSide,
     });
@@ -171,6 +173,47 @@ document.addEventListener("DOMContentLoaded", () => {
         },
         false
     );
+
+    const mouseVec = new THREE.Vector2();
+    const basePos = 0;
+
+    const cursorElem = document.querySelector("#cursor");
+
+    // handle mouse move
+    window.addEventListener(
+        "mousemove",
+        event => {
+            const x = event.clientX;
+            const y = event.clientY;
+            const rect = canvas.getBoundingClientRect();
+            const x1 = ((x - rect.left) / rect.width) * 2 - 1;
+            const y1 = -((y - rect.top) / rect.height) * 2 + 1;
+
+            if (cursorElem) {
+                cursorElem.style.left = `${x}px`;
+                cursorElem.style.top = `${y}px`;
+            }
+
+            mouseVec.x = THREE.MathUtils.lerp(x1, basePos, 0.002);
+            mouseVec.y = THREE.MathUtils.lerp(y1, basePos, 0.002);
+        },
+        false
+    );
+    // return mouse to center rafer mouse leave
+
+    const force = () => {
+        const rafPos = mouseVec;
+        // if (rafPos.x < basePos || -rafPos.x > basePos) rafPos.x += (basePos - rafPos.x) * 0.01;
+        // if (rafPos.y < basePos || -rafPos.y > basePos) rafPos.y += (basePos - rafPos.y) * 0.01;
+
+        rafPos.x = THREE.MathUtils.lerp(rafPos.x, basePos, 0.001);
+        rafPos.y = THREE.MathUtils.lerp(rafPos.y, basePos, 0.001);
+
+        plane.material.uniforms.uMouse.value = rafPos;
+        console.log(rafPos);
+        window.requestAnimationFrame(force);
+    };
+    window.requestAnimationFrame(force);
 
     // add gui
     gui.add(guiObject, "timeSpeed", 0.001, 0.05).onChange(value => {
@@ -250,6 +293,13 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
     );
+
+    gui.add(guiObject, "enableMouse", 0, 1)
+        .step(1)
+        .onChange(value => {
+            plane.material.uniforms.uEnableMouse.value = value;
+        });
+
     // camera fov
     if (camera instanceof THREE.PerspectiveCamera)
         gui.add(camera, "fov", 0, 180)
@@ -257,6 +307,8 @@ document.addEventListener("DOMContentLoaded", () => {
             .onChange(() => {
                 camera.updateProjectionMatrix();
             });
+
+    gui.close();
 
     const render = () => {
         requestAnimationFrame(render);
