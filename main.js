@@ -20,7 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
         lineCount: 24,
         lineMultiplier: 15,
         color2: "#000",
-        color1: "#f7f6f3",
+        color1: "transparent",
         easing: "sineIn",
         cameraType: "PerspectiveCamera",
     };
@@ -34,22 +34,24 @@ document.addEventListener("DOMContentLoaded", () => {
     if (guiObject.cameraType === "PerspectiveCamera") {
         camera = new THREE.PerspectiveCamera(53, window.innerWidth / window.innerHeight, 0.1, 1000);
     }
+    const canvas = document.querySelector("#canvas");
     camera.position.z = 7.16;
     const renderer = new THREE.WebGLRenderer({
         antialias: true,
+        alpha: true,
+        canvas: canvas,
     });
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(canvas.offsetWidth, canvas.offsetHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setClearColor(new THREE.Color("transparent"));
-    document.body.appendChild(renderer.domElement);
 
     const renderPass = new RenderPass(scene, camera);
     renderPass.clearAlpha = 0;
-
     const fxaaPass = new ShaderPass(FXAAShader);
     const outputPass = new OutputPass();
-
     const composer = new EffectComposer(renderer);
+    composer.setSize(canvas.offsetWidth, canvas.offsetHeight);
+
     const pixelRatio = window.devicePixelRatio;
     fxaaPass.material.uniforms["resolution"].value.x =
         1 / (renderer.domElement.offsetWidth * pixelRatio);
@@ -81,6 +83,7 @@ document.addEventListener("DOMContentLoaded", () => {
         baseMaterial: THREE.MeshBasicMaterial,
         vertexShader: vs,
         fragmentShader: fs,
+        transparent: true,
         silent: true, // Disables the default warning if true
         uniforms: {
             uTime: new THREE.Uniform(0),
@@ -98,7 +101,7 @@ document.addEventListener("DOMContentLoaded", () => {
             uColor2: new THREE.Uniform(new THREE.Color(guiObject.color2)),
             uEasing: new THREE.Uniform(guiObject.easing),
         },
-        side: THREE.DoubleSide,
+        side: THREE.FrontSide,
     });
     const geometry = new THREE.SphereGeometry(2, 64, 64);
     const plane = new THREE.Mesh(geometry, material);
