@@ -21,8 +21,12 @@ document.addEventListener("DOMContentLoaded", () => {
         lineMultiplier: 15,
         color2: "#000",
         color1: "transparent",
-        easing: "sineIn",
+        easing: "linear",
         cameraType: "PerspectiveCamera",
+        radius: 1.2,
+        rotation: Math.PI / 2,
+        offsetX: 0,
+        offsetY: 0,
     };
     // create basic scene
     let camera = null;
@@ -66,11 +70,27 @@ document.addEventListener("DOMContentLoaded", () => {
     // add orbit controls
     let controls = new OrbitControls(camera, renderer.domElement);
     controls.rotateSpeed = 1.0;
-    // set azimuthal angle and polar angle
-    const defaultPolarAngle = 1.551244071072532;
-    const defaultAzimuthalAngle = -0.5080632974865708;
-    controls.polarAngle = defaultPolarAngle;
-    controls.azimuthalAngle = defaultAzimuthalAngle;
+
+    const setPolar = 1.5653380737681526;
+    const setAzimuth = 0.002202166870058767;
+    const orig = [
+        controls.minPolarAngle,
+        controls.maxPolarAngle,
+        controls.minAzimuthAngle,
+        controls.maxAzimuthAngle,
+    ];
+
+    controls.minPolarAngle = setPolar;
+    controls.maxPolarAngle = setPolar;
+    controls.minAzimuthAngle = setAzimuth;
+    controls.maxAzimuthAngle = setAzimuth;
+    controls.update();
+
+    controls.minPolarAngle = orig[0];
+    controls.maxPolarAngle = orig[1];
+    controls.minAzimuthAngle = orig[2];
+    controls.maxAzimuthAngle = orig[3];
+    controls.update();
     // controls.enabled = false;
 
     const loader = new THREE.TextureLoader();
@@ -85,6 +105,7 @@ document.addEventListener("DOMContentLoaded", () => {
         fragmentShader: fs,
         transparent: true,
         silent: true, // Disables the default warning if true
+        color: new THREE.Color("transparent"),
         uniforms: {
             uTime: new THREE.Uniform(0),
             uResolution: new THREE.Uniform(
@@ -100,14 +121,20 @@ document.addEventListener("DOMContentLoaded", () => {
             uColor1: new THREE.Uniform(new THREE.Color(guiObject.color1)),
             uColor2: new THREE.Uniform(new THREE.Color(guiObject.color2)),
             uEasing: new THREE.Uniform(guiObject.easing),
+            uRotation: new THREE.Uniform(guiObject.rotation),
+            uRadius: new THREE.Uniform(guiObject.radius),
+            uOffsetX: new THREE.Uniform(guiObject.offsetX),
+            uOffsetY: new THREE.Uniform(guiObject.offsetY),
         },
-        side: THREE.FrontSide,
+        side: THREE.DoubleSide,
     });
     const geometry = new THREE.SphereGeometry(2, 64, 64);
     const plane = new THREE.Mesh(geometry, material);
     plane.castShadow = false;
+    // scale geometry to make it flat circle
+    plane.scale.set(1, 1, 0.01);
     scene.add(plane);
-
+    camera.lookAt(plane.position);
     // add circlular outline for sphere
     const outlineMaterial = new THREE.MeshBasicMaterial({
         color: new THREE.Color(guiObject.color2),
@@ -116,7 +143,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const outlineGeometry = new THREE.SphereGeometry(2, 64, 64);
     const outline = new THREE.Mesh(outlineGeometry, outlineMaterial);
     outline.scale.set(1.0075, 1.0075, 1.0075);
-    scene.add(outline);
+    // scene.add(outline);
 
     // resize handling
     window.addEventListener(
@@ -176,25 +203,25 @@ document.addEventListener("DOMContentLoaded", () => {
         outlineMaterial.color = new THREE.Color(value);
     });
     // add select with easing functions
-    gui.add(guiObject, "easing", [
-        "linear",
-        "exponentialIn",
-        "elasticIn",
-        "cubicIn",
-        "sineIn",
-        "bounceOut",
-    ]).onChange(value => {
+    gui.add(guiObject, "easing", ["linear", "sineIn"]).onChange(value => {
         let easing = 1;
         if (value === "linear") easing = 0;
-        if (value === "cubicIn") easing = 1;
-        if (value === "elasticIn") easing = 2;
-        if (value === "exponentialIn") easing = 3;
         if (value === "sineIn") easing = 4;
-        if (value === "bounceOut") easing = 5;
 
         plane.material.uniforms.uEasing.value = easing;
     });
-
+    gui.add(guiObject, "radius", 0.1, 5).onChange(value => {
+        plane.material.uniforms.uRadius.value = value;
+    });
+    gui.add(guiObject, "rotation", 0, Math.PI * 2).onChange(value => {
+        plane.material.uniforms.uRotation.value = value;
+    });
+    gui.add(guiObject, "offsetX", 0, 100).onChange(value => {
+        plane.material.uniforms.uOffsetX.value = value;
+    });
+    gui.add(guiObject, "offsetY", 0, 100).onChange(value => {
+        plane.material.uniforms.uOffsetY.value = value;
+    });
     // camera type
     gui.add(guiObject, "cameraType", ["PerspectiveCamera", "OrthographicCamera"]).onChange(
         value => {
@@ -236,8 +263,6 @@ document.addEventListener("DOMContentLoaded", () => {
         // update uniforms
         plane.material.uniforms.uTime.value += guiObject.timeSpeed;
         // log azimuthal angle and polar angle
-        // console.log("azimuthal angle", controls.getAzimuthalAngle());
-        // console.log("polar angle", controls.getPolarAngle());
 
         composer.render();
     };

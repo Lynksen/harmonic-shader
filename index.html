@@ -12,7 +12,7 @@
                 margin: 0;
                 padding: 0;
                 overflow: hidden;
-                background-color: #fbf7f7;
+                background-color: #ffffff;
             }
             .test {
                 position: absolute;
@@ -47,12 +47,14 @@
             varying vec3 vPosition;
             varying vec2 vUv;
             varying vec3 vNormale;
+            varying vec3 cameraPos;
 
 
             void main() {
                 vNormale = normal;
                 vPosition = position;
                 vUv = uv;
+                cameraPos = position;
                 vec3 mPos = position;
                 vec3 n = normalize(mPos);
 
@@ -78,6 +80,12 @@
             uniform vec3 uColor1;
             uniform vec3 uColor2;
             uniform int uEasing;
+            varying vec3 cameraPos;
+            uniform float uRadius;
+            uniform float uRotation;
+            uniform float uOffsetX;
+            uniform float uOffsetY;
+
 
             #define SQRT2PI 2.506628274631
             #define HALF_PI 1.5707963267948966
@@ -155,38 +163,10 @@
               return cexp(vec2(0.0,float(m)*phi))*abs_value;
             }
 
-            // Easing functions
-            float cubicIn(float t) {
-                return t * t * t;
-            }
-            float elasticIn(float t) {
-                return sin(13.0 * t * HALF_PI) * pow(2.0, 10.0 * (t - 1.0));
-            }
-            float exponentialIn(float t) {
-                return t == 0.0 ? t : pow(2.0, 10.0 * (t - 1.0));
-            }
             float sineIn(float t) {
                 return sin((t - 1.0) * HALF_PI) + 1.0;
             }
-            float bounceOut(float t) {
-                const float a = 4.0 / 11.0;
-                const float b = 8.0 / 11.0;
-                const float c = 9.0 / 10.0;
 
-                const float ca = 4356.0 / 361.0;
-                const float cb = 35442.0 / 1805.0;
-                const float cc = 16061.0 / 1805.0;
-
-                float t2 = t * t;
-
-                return t < a
-                    ? 7.5625 * t2
-                    : t < b
-                    ? 9.075 * t2 - 9.9 * t + 3.4
-                    : t < c
-                        ? ca * t2 - cb * t + cc
-                        : 10.8 * t * t - 20.52 * t + 10.72;
-            }
             float sdCircle( vec2 p, float r )
             {
                 float d = length(p) - r;
@@ -194,27 +174,35 @@
                 return smoothstep(-edgeWidth, edgeWidth, d);
             }
 
+            vec2 rotate2d (vec2 _st, float _angle) {
+                _st -= 0.5;
+                _st =  mat2(cos(_angle),-sin(_angle),
+                            sin(_angle),cos(_angle)) * _st;
+                _st += 0.5;
+                return _st;
+            }
+            vec3 rotate3d (vec3 _st, float _angle) {
+                _st -= 0.5;
+                _st =  mat3(cos(_angle),-sin(_angle), 0.0,
+                            sin(_angle),cos(_angle), 0.0,
+                            0.0, 0.0, 1.0) * _st;
+                _st += 0.5;
+                return _st;
+            }
+
             void main() {
                 vec2 uv = vUv;
-                vec3 n = normalize(vNormale);
+                vec3 norm = vNormale;
+                vec3 n = normalize(norm);
                 vec3 color = uColor1;
                 float time = uTime;
-                if(uEasing == 1) {
-                    time = cubicIn(uTime);
-                }
-                if(uEasing == 2) {
-                    time = elasticIn(uTime * 0.1);
-                }
-                if(uEasing == 3) {
-                    time = exponentialIn(uTime * 0.1);
-                }
+
+
                 if(uEasing == 4) {
                     time = sineIn(uTime);
                 }
-                if(uEasing == 5) {
-                    time = bounceOut(uTime);
-                }
 
+                n.y += uOffsetY * 0.01;
                 float sinTheta = sqrt(1.0 - n.y * n.y);
                 float phi = sinTheta > 0.0 ? atan(n.x, n.z) : 0.0;
                 float theta = atan(sinTheta, n.y);
@@ -222,7 +210,9 @@
                 int order = uOrder;
 
                 // compute spherical harmonics
-                vec2 sh1 = sphere_harm(theta, phi, degree, order) + sphere_harm(theta, phi, degree, order);
+                vec2 sh1 = sphere_harm(theta, phi, degree, order);
+                sh1 = rotate2d(sh1, uOffsetX);
+
 
                 float r = length(sh1); // convert from Cartesian to Polar coordinates
                 float theta1 = atan(sh1.y, sh1.x);
@@ -231,16 +221,30 @@
                 float circle = 0.0;
                 if(sh1.x < 0.0 || sh1.x > 0.0) {
                     vec2 sh2 = mod(fract(sh1) + time * 0.1, 1.0);
+
                     // Compute the distance to the circle and smooth it
                     float dCircle = sin(mod(sh2.x * uLineCount, 1.0)) * 10.;
                     circle = smoothstep(-edgeWidth, edgeWidth, (1.0 * uLineWidth) - abs(dCircle));
                 }
 
+
                 color = mix(uColor1, uColor2, circle);
 
                 vec4 final = vec4(color, 1.0);
 
+                // don't render some area
+                vec2 posRotated = rotate2d(cameraPos.xz, uRotation);
+                if(posRotated.x < uRadius) {
+                   final = vec4(uColor1, 1.0);
+                }
+
+                // render black line on the not rendered area
+                if(posRotated.x - uRadius < uLineWidth * 0.01 && posRotated.x - uRadius > -uLineWidth * 0.01) {
+                    final = vec4(0.0, 0.0, 0.0, 1.0);
+                }
+
                 csm_DiffuseColor = final;
+
                 #include <tonemapping_fragment>
                 #include <colorspace_fragment>
             }
