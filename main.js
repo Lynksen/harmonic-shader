@@ -216,10 +216,12 @@ document.addEventListener("DOMContentLoaded", () => {
     gui.add(guiObject, "rotation", 0, Math.PI * 2).onChange(value => {
         plane.material.uniforms.uRotation.value = value;
     });
-    gui.add(guiObject, "offsetX", 0, 100).onChange(value => {
-        plane.material.uniforms.uOffsetX.value = value;
-    });
-    gui.add(guiObject, "offsetY", 0, 100).onChange(value => {
+    gui.add(guiObject, "offsetX", 0, 100)
+        .step(0.01)
+        .onChange(value => {
+            plane.material.uniforms.uOffsetX.value = value;
+        });
+    gui.add(guiObject, "offsetY", -100, 100).onChange(value => {
         plane.material.uniforms.uOffsetY.value = value;
     });
     // camera type
@@ -237,6 +239,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 camera.updateProjectionMatrix();
                 controls.dispose();
                 controls = new OrbitControls(camera, renderer.domElement);
+                renderPass.camera = camera;
             } else {
                 const aspect = window.innerWidth / window.innerHeight;
                 camera = new THREE.OrthographicCamera(-2 * aspect, 2 * aspect, 2, -2, 0.1, 1000);
@@ -245,6 +248,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 camera.updateProjectionMatrix();
                 controls.dispose();
                 controls = new OrbitControls(camera, renderer.domElement);
+                renderPass.camera = camera;
             }
         }
     );

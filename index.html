@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
     <head>
         <meta charset="UTF-8" />
@@ -193,6 +193,7 @@
             void main() {
                 vec2 uv = vUv;
                 vec3 norm = vNormale;
+                norm.y += uOffsetY * 0.01;
                 vec3 n = normalize(norm);
                 vec3 color = uColor1;
                 float time = uTime;
@@ -202,7 +203,6 @@
                     time = sineIn(uTime);
                 }
 
-                n.y += uOffsetY * 0.01;
                 float sinTheta = sqrt(1.0 - n.y * n.y);
                 float phi = sinTheta > 0.0 ? atan(n.x, n.z) : 0.0;
                 float theta = atan(sinTheta, n.y);
@@ -219,6 +219,7 @@
                 float edgeWidth = 0.1;
 
                 float circle = 0.0;
+                // rotate x
                 if(sh1.x < 0.0 || sh1.x > 0.0) {
                     vec2 sh2 = mod(fract(sh1) + time * 0.1, 1.0);
 
@@ -233,14 +234,15 @@
                 vec4 final = vec4(color, 1.0);
 
                 // don't render some area
-                vec2 posRotated = rotate2d(cameraPos.xz, uRotation);
+                vec2 posRotated = rotate2d(cameraPos.xz, HALF_PI);
+
                 if(posRotated.x < uRadius) {
                    final = vec4(uColor1, 1.0);
                 }
 
                 // render black line on the not rendered area
                 if(posRotated.x - uRadius < uLineWidth * 0.01 && posRotated.x - uRadius > -uLineWidth * 0.01) {
-                    final = vec4(0.0, 0.0, 0.0, 1.0);
+                    final = vec4(uColor2, 1.0);
                 }
 
                 csm_DiffuseColor = final;
