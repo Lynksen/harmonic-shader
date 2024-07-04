@@ -213,9 +213,6 @@ document.addEventListener("DOMContentLoaded", () => {
     gui.add(guiObject, "radius", 0.1, 5).onChange(value => {
         plane.material.uniforms.uRadius.value = value;
     });
-    gui.add(guiObject, "rotation", 0, Math.PI * 2).onChange(value => {
-        plane.material.uniforms.uRotation.value = value;
-    });
     gui.add(guiObject, "offsetX", 0, 100)
         .step(0.01)
         .onChange(value => {
