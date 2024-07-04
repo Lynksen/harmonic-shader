@@ -70,6 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // add orbit controls
     let controls = new OrbitControls(camera, renderer.domElement);
     controls.rotateSpeed = 1.0;
+    controls.enableRotate = false;
 
     const setPolar = 1.5653380737681526;
     const setAzimuth = 0.002202166870058767;
