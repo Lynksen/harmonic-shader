@@ -1,255 +1,238 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Shader</title>
-    <link rel="icon" href="./favicon.ico" type="image/x-icon" />
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+        <title>Shader</title>
+        <link rel="icon" href="./favicon.ico" type="image/x-icon" />
 
-    <style>
-      body {
-        margin: 0;
-        padding: 0;
-        overflow: hidden;
-        background-color: #ffffff;
-      }
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                overflow: hidden;
+                background-color: #ffffff;
+            }
+            .test {
+                position: absolute;
+                top: 10%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                font-size: 2rem;
+                color: #000;
+                font-family: Arial, sans-serif;
+                font-weight: bold;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="test">Hey this canvas is transparent</div>
 
-      .overlay_2d {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100dvw;
-        height: 100vh;
-        /* background-color: #000; */
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 1000;
-      }
-
-      .overlay_2d__content {
-        width: 700px;
-        aspect-ratio: 1;
-        border-radius: 50%;
-        background: transparent;
-        border: 5px solid #000;
-        outline: 1000px solid #f7f6f3;
-      }
-    </style>
-  </head>
-  <body>
-    <script type="x-shader/x-vertex" id="vertexShader">
-      uniform float uTime;
-      varying vec3 vPosition;
-      varying vec2 vUv;
-      varying vec3 vNormale;
+        <script type="x-shader/x-vertex" id="vertexShader">
+            uniform float uTime;
+            varying vec3 vPosition;
+            varying vec2 vUv;
+            varying vec3 vNormale;
 
 
-      void main() {
-          vNormale = normal;
-          vPosition = position;
-          vUv = uv;
-          vec3 mPos = position;
-          vec3 n = normalize(mPos);
+            void main() {
+                vNormale = normal;
+                vPosition = position;
+                vUv = uv;
+                vec3 mPos = position;
+                vec3 n = normalize(mPos);
 
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(mPos, 1.0);
-      }
-    </script>
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(mPos, 1.0);
+            }
+        </script>
 
-    <script type="x-shader/x-fragment" id="fragmentShader">
-      precision highp float;
+        <script type="x-shader/x-fragment" id="fragmentShader">
+            precision highp float;
 
-      uniform sampler2D uTexture;
-      uniform float uTime;
-      uniform vec2 uResolution;
-      uniform vec2 uMouse;
-      varying vec2 vUv;
-      varying vec3 vNormale;
-      varying vec3 vPosition;
-      uniform int uOrder;
-      uniform int uDegree;
-      uniform float uLineWidth;
-      uniform float uLineCount;
-      uniform float uLineMultiplier;
-      uniform vec3 uColor1;
-      uniform vec3 uColor2;
-      uniform int uEasing;
+            uniform sampler2D uTexture;
+            uniform float uTime;
+            uniform vec2 uResolution;
+            uniform vec2 uMouse;
+            varying vec2 vUv;
+            varying vec3 vNormale;
+            varying vec3 vPosition;
+            uniform int uOrder;
+            uniform int uDegree;
+            uniform float uLineWidth;
+            uniform float uLineCount;
+            uniform float uLineMultiplier;
+            uniform vec3 uColor1;
+            uniform vec3 uColor2;
+            uniform int uEasing;
 
-      #define SQRT2PI 2.506628274631
-      #define HALF_PI 1.5707963267948966
+            #define SQRT2PI 2.506628274631
+            #define HALF_PI 1.5707963267948966
 
-      float sineInOut(float t) {
-        return -0.5 * (cos(PI * t) - 1.0);
-      }
+            float sineInOut(float t) {
+              return -0.5 * (cos(PI * t) - 1.0);
+            }
 
-      // factorial
-      float fac(int n) {
-        float res = 1.0;
-        for (int i = n; i > 1; i--)
-            res *= float(i);
-        return res;
-      }
-      // double factorial
-      float dfac(int n) {
-        float res = 1.0;
-        for (int i = n; i > 1; i-=2)
-            res *= float(i);
-        return res;
-      }
-      // fac(l-m)/fac(l+m) but more stable
-      float fac2(int l, int m) {
-        int am = abs(m);
-        if (am > l)
-            return 0.0;
-        float res = 1.0;
-        for (int i = max(l-am+1,2); i <= l+am; i++)
-            res *= float(i);
-        if (m < 0)
-            return res;
-        return 1.0 / res;
-      }
+            // factorial
+            float fac(int n) {
+              float res = 1.0;
+              for (int i = n; i > 1; i--)
+                  res *= float(i);
+              return res;
+            }
+            // double factorial
+            float dfac(int n) {
+              float res = 1.0;
+              for (int i = n; i > 1; i-=2)
+                  res *= float(i);
+              return res;
+            }
+            // fac(l-m)/fac(l+m) but more stable
+            float fac2(int l, int m) {
+              int am = abs(m);
+              if (am > l)
+                  return 0.0;
+              float res = 1.0;
+              for (int i = max(l-am+1,2); i <= l+am; i++)
+                  res *= float(i);
+              if (m < 0)
+                  return res;
+              return 1.0 / res;
+            }
 
 
-      // complex exponential
-      vec2 cexp(vec2 c) {
-        return exp(c.x)*vec2(cos(c.y), sin(c.y));
-      }
+            // complex exponential
+            vec2 cexp(vec2 c) {
+              return exp(c.x)*vec2(cos(c.y), sin(c.y));
+            }
 
-      // complex multiplication
-      vec2 cmul(vec2 a, vec2 b) {
-        return vec2(a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x);
-      }
+            // complex multiplication
+            vec2 cmul(vec2 a, vec2 b) {
+              return vec2(a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x);
+            }
 
-      // complex conjugation
-      vec2 conj(vec2 c) { return vec2(c.x, -c.y); }
+            // complex conjugation
+            vec2 conj(vec2 c) { return vec2(c.x, -c.y); }
 
-      // complex/real magnitude squared
-      float sqr(float x) { return x*x; }
-      float sqr(vec2 x) { return dot(x,x); }
+            // complex/real magnitude squared
+            float sqr(float x) { return x*x; }
+            float sqr(vec2 x) { return dot(x,x); }
 
-      // associated legendre polynomials
-      float legendre_poly(float x, int l, int m) {
-        if (l < abs(m))
-            return 0.0;
-        if (l == 0)
-            return 1.0;
-        float mul = m >= 0 ? 1.0 : float((~m&1)*2-1)*fac2(l,m);
-        m = abs(m);
-        // recursive calculation of legendre polynomial
-        float lp1 = 0.0;
-        float lp2 = float((~m&1)*2-1)*dfac(2*m-1)*pow(1.0-x*x, float(m)/2.0);
-        for (int i = m+1; i <= l; i++) {
-            float lp = (x*float(2*i-1)*lp2 - float(i+m-1)*lp1)/float(i-m);
-            lp1 = lp2; lp2 = lp;
-        }
-        return lp2 / mul;
-      }
+            // associated legendre polynomials
+            float legendre_poly(float x, int l, int m) {
+              if (l < abs(m))
+                  return 0.0;
+              if (l == 0)
+                  return 1.0;
+              float mul = m >= 0 ? 1.0 : float((~m&1)*2-1)*fac2(l,m);
+              m = abs(m);
+              // recursive calculation of legendre polynomial
+              float lp1 = 0.0;
+              float lp2 = float((~m&1)*2-1)*dfac(2*m-1)*pow(1.0-x*x, float(m)/2.0);
+              for (int i = m+1; i <= l; i++) {
+                  float lp = (x*float(2*i-1)*lp2 - float(i+m-1)*lp1)/float(i-m);
+                  lp1 = lp2; lp2 = lp;
+              }
+              return lp2 / mul;
+            }
 
-      vec2 sphere_harm(float theta, float phi, int l, int m) {
-        float abs_value = 1.0/SQRT2PI*sqrt(float(2*l+1)/2.0*fac2(l,m))
-                          *legendre_poly(cos(theta), l, m);
-        return cexp(vec2(0.0,float(m)*phi))*abs_value;
-      }
+            vec2 sphere_harm(float theta, float phi, int l, int m) {
+              float abs_value = 1.0/SQRT2PI*sqrt(float(2*l+1)/2.0*fac2(l,m))
+                                *legendre_poly(cos(theta), l, m);
+              return cexp(vec2(0.0,float(m)*phi))*abs_value;
+            }
 
-      // Easing functions
-      float cubicIn(float t) {
-          return t * t * t;
-      }
-      float elasticIn(float t) {
-          return sin(13.0 * t * HALF_PI) * pow(2.0, 10.0 * (t - 1.0));
-      }
-      float exponentialIn(float t) {
-          return t == 0.0 ? t : pow(2.0, 10.0 * (t - 1.0));
-      }
-      float sineIn(float t) {
-          return sin((t - 1.0) * HALF_PI) + 1.0;
-      }
-      float bounceOut(float t) {
-          const float a = 4.0 / 11.0;
-          const float b = 8.0 / 11.0;
-          const float c = 9.0 / 10.0;
+            // Easing functions
+            float cubicIn(float t) {
+                return t * t * t;
+            }
+            float elasticIn(float t) {
+                return sin(13.0 * t * HALF_PI) * pow(2.0, 10.0 * (t - 1.0));
+            }
+            float exponentialIn(float t) {
+                return t == 0.0 ? t : pow(2.0, 10.0 * (t - 1.0));
+            }
+            float sineIn(float t) {
+                return sin((t - 1.0) * HALF_PI) + 1.0;
+            }
+            float bounceOut(float t) {
+                const float a = 4.0 / 11.0;
+                const float b = 8.0 / 11.0;
+                const float c = 9.0 / 10.0;
 
-          const float ca = 4356.0 / 361.0;
-          const float cb = 35442.0 / 1805.0;
-          const float cc = 16061.0 / 1805.0;
+                const float ca = 4356.0 / 361.0;
+                const float cb = 35442.0 / 1805.0;
+                const float cc = 16061.0 / 1805.0;
 
-          float t2 = t * t;
+                float t2 = t * t;
 
-          return t < a
-              ? 7.5625 * t2
-              : t < b
-              ? 9.075 * t2 - 9.9 * t + 3.4
-              : t < c
-                  ? ca * t2 - cb * t + cc
-                  : 10.8 * t * t - 20.52 * t + 10.72;
-      }
-      float sdCircle( vec2 p, float r )
-      {
-          return length(p) - r;
-      }
+                return t < a
+                    ? 7.5625 * t2
+                    : t < b
+                    ? 9.075 * t2 - 9.9 * t + 3.4
+                    : t < c
+                        ? ca * t2 - cb * t + cc
+                        : 10.8 * t * t - 20.52 * t + 10.72;
+            }
+            float sdCircle( vec2 p, float r )
+            {
+                float d = length(p) - r;
+                float edgeWidth = fwidth(d); // Compute the width of the edge
+                return smoothstep(-edgeWidth, edgeWidth, d);
+            }
 
-      void main() {
-          vec2 uv = vUv;
-          vec3 n = normalize(vNormale);
-          vec3 color = uColor1;
-          float time = uTime;
-          if(uEasing == 1) {
-              time = cubicIn(uTime);
-          }
-          if(uEasing == 2) {
-              time = elasticIn(uTime * 0.1);
-          }
-          if(uEasing == 3) {
-              time = exponentialIn(uTime * 0.1);
-          }
-          if(uEasing == 4) {
-              time = sineIn(uTime);
-          }
-          if(uEasing == 5) {
-              time = bounceOut(uTime);
-          }
+            void main() {
+                vec2 uv = vUv;
+                vec3 n = normalize(vNormale);
+                vec3 color = uColor1;
+                float time = uTime;
+                if(uEasing == 1) {
+                    time = cubicIn(uTime);
+                }
+                if(uEasing == 2) {
+                    time = elasticIn(uTime * 0.1);
+                }
+                if(uEasing == 3) {
+                    time = exponentialIn(uTime * 0.1);
+                }
+                if(uEasing == 4) {
+                    time = sineIn(uTime);
+                }
+                if(uEasing == 5) {
+                    time = bounceOut(uTime);
+                }
 
-          //float theta = acos(n.y);
-          float sinTheta = sqrt(1.0 - n.y * n.y);
-          float phi = sinTheta > 0.0 ? atan(n.x, n.z) : 0.0;
-          float theta = atan(sinTheta, n.y);
-          int degree = uDegree;
-          int order = uOrder;
+                float sinTheta = sqrt(1.0 - n.y * n.y);
+                float phi = sinTheta > 0.0 ? atan(n.x, n.z) : 0.0;
+                float theta = atan(sinTheta, n.y);
+                int degree = uDegree;
+                int order = uOrder;
 
-          // compute spherical harmonics
-          // vec2 sh1 = sphere_harm(theta, phi, degree, order) + sphere_harm(theta, phi, degree, order);
+                // compute spherical harmonics
+                vec2 sh1 = sphere_harm(theta, phi, degree, order) + sphere_harm(theta, phi, degree, order);
 
-          vec2 sh1 = sphere_harm(theta, phi, 4, 2) - sphere_harm(theta, phi, 5, 6);
+                float r = length(sh1); // convert from Cartesian to Polar coordinates
+                float theta1 = atan(sh1.y, sh1.x);
+                float edgeWidth = 0.1;
 
-          float r = length(sh1); // convert from Cartesian to Polar coordinates
-          float theta1 = atan(sh1.y, sh1.x);
-          float edgeWidth = 0.01;
+                float circle = 0.0;
+                if(sh1.x < 0.0 || sh1.x > 0.0) {
+                    vec2 sh2 = mod(fract(sh1) + time * 0.1, 1.0);
+                    // Compute the distance to the circle and smooth it
+                    float dCircle = sin(mod(sh2.x * uLineCount, 1.0)) * 10.;
+                    circle = smoothstep(-edgeWidth, edgeWidth, (1.0 * uLineWidth) - abs(dCircle));
+                }
 
-          float dt = 0.0;
-          float circle = 0.0;
-          if(sh1.x < 0.0 || sh1.x > 0.0) {
-              vec2 sh2 = mod(fract(sh1) + time * 0.1, 1.0);
-              dt = cos(mod(length((sh2 - vec2(0.5, -0.0))), PI));
-              // Compute the distance to the circle and smooth it
-              float dCircle = sin(mod(sh2.x * uLineCount, 1.0)) * 16.;
-              circle = smoothstep(-edgeWidth, edgeWidth, (1.0 * uLineWidth) - abs(dCircle));
-          }
+                color = mix(uColor1, uColor2, circle);
 
-          color = mix(uColor1, uColor2, circle);
+                vec4 final = vec4(color, 1.0);
 
-          vec4 final = vec4(color, 1.0);
-          //gl_FragColor = final;
-          csm_DiffuseColor = final;
-          #include <tonemapping_fragment>
-          #include <colorspace_fragment>
-      }
-    </script>
+                csm_DiffuseColor = final;
+                #include <tonemapping_fragment>
+                #include <colorspace_fragment>
+            }
+        </script>
 
-    <script type="module" src="main.js"></script>
-
-    <div class="overlay_2d">
-      <div class="overlay_2d__content"></div>
-    </div>
-  </body>
+        <script type="module" src="main.js"></script>
+    </body>
 </html>
