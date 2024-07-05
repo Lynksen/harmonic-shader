@@ -37,7 +37,7 @@
                 width: 50svh;
                 height: 50svh;
                 z-index: 0;
-                background-color: transparent;
+                background-color: #f8f6f3;
             }
         </style>
     </head>
@@ -206,7 +206,6 @@
                 vec3 color = uColor1;
                 float time = uTime;
 
-
                 if(uEasing == 4) {
                     time = sineIn(uTime);
                 }
@@ -258,6 +257,10 @@
                 }
 
                 csm_DiffuseColor = final;
+
+                //csm_DiffuseColor = vec4(vec3(0.0), 1.0);
+
+                //csm_DiffuseColor = vec4(1.0);
 
                 #include <tonemapping_fragment>
                 #include <colorspace_fragment>

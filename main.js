@@ -6,6 +6,7 @@ import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { FXAAShader } from "three/addons/shaders/FXAAShader.js";
+import GUI from "lil-gui";
 
 document.addEventListener("DOMContentLoaded", () => {
     const canvas = document.querySelector("#canvas");
@@ -16,8 +17,8 @@ document.addEventListener("DOMContentLoaded", () => {
         lineWidth: 1,
         lineCount: 23,
         lineMultiplier: 15,
-        color2: "#000",
         color1: "#f8f6f3",
+        color2: "#000",
         easing: "linear",
         cameraType: "PerspectiveCamera",
         radius: 0.8,
@@ -42,7 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
             1000
         );
     }
-    camera.position.z = 3.16;
+    camera.position.z = 3.3;
     const renderer = new THREE.WebGLRenderer({
         antialias: true,
         alpha: true,
@@ -50,7 +51,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     renderer.setSize(canvas.offsetHeight, canvas.offsetHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setClearColor(new THREE.Color("transparent"));
+    renderer.setClearColor(new THREE.Color(guiObject.color1));
 
     const renderPass = new RenderPass(scene, camera);
     renderPass.clearAlpha = 0;
@@ -107,9 +108,8 @@ document.addEventListener("DOMContentLoaded", () => {
         baseMaterial: THREE.MeshBasicMaterial,
         vertexShader: vs,
         fragmentShader: fs,
-        transparent: true,
         silent: true, // Disables the default warning if true
-        color: new THREE.Color("transparent"),
+        color: new THREE.Color(guiObject.color1),
         uniforms: {
             uTime: new THREE.Uniform(0),
             uResolution: new THREE.Uniform(
@@ -131,15 +131,29 @@ document.addEventListener("DOMContentLoaded", () => {
             uOffsetY: new THREE.Uniform(guiObject.offsetY),
             uEnableMouse: new THREE.Uniform(guiObject.enableMouse),
         },
-        side: THREE.DoubleSide,
+        side: THREE.FrontSide,
     });
     const geometry = new THREE.SphereGeometry(2, 64, 64);
+
     const plane = new THREE.Mesh(geometry, material);
     plane.castShadow = false;
     // scale geometry to make it flat circle
     plane.scale.set(1, 1, 0.01);
     scene.add(plane);
     camera.lookAt(plane.position);
+
+    // create donat geometry
+    const donatGeometry = new THREE.TorusGeometry(2.5, 0.5, 16, 100);
+    const donatMaterial = new THREE.MeshBasicMaterial({
+        color: new THREE.Color(guiObject.color1),
+        depthTest: false,
+    });
+    const donat = new THREE.Mesh(donatGeometry, donatMaterial);
+
+    donat.position.set(0, 0, 0);
+    scene.add(donat);
+
+    // create
 
     // resize handling
     window.addEventListener(
@@ -192,7 +206,7 @@ document.addEventListener("DOMContentLoaded", () => {
         rafPos.x = THREE.MathUtils.lerp(rafPos.x, basePos, 0.001);
         rafPos.y = THREE.MathUtils.lerp(rafPos.y, basePos, 0.001);
 
-        plane.material.uniforms.uMouse.value = rafPos;
+        if (plane.material.uniforms) plane.material.uniforms.uMouse.value = rafPos;
         window.requestAnimationFrame(force);
     };
     window.requestAnimationFrame(force);
@@ -202,7 +216,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // update controls
         controls.update();
         // update uniforms
-        plane.material.uniforms.uTime.value += guiObject.timeSpeed;
+        if (plane.material.uniforms) plane.material.uniforms.uTime.value += guiObject.timeSpeed;
         // log azimuthal angle and polar angle
 
         composer.render();
