@@ -170,8 +170,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const mouseVec = new THREE.Vector2();
     const basePos = 0;
 
-    const cursorElem = document.querySelector("#cursor");
-
     // handle mouse move
     window.addEventListener(
         "mousemove",
@@ -181,11 +179,6 @@ document.addEventListener("DOMContentLoaded", () => {
             const rect = canvas.getBoundingClientRect();
             const x1 = ((x - rect.left) / rect.width) * 2 - 1;
             const y1 = -((y - rect.top) / rect.height) * 2 + 1;
-
-            if (cursorElem) {
-                cursorElem.style.left = `${x}px`;
-                cursorElem.style.top = `${y}px`;
-            }
 
             mouseVec.x = THREE.MathUtils.lerp(x1, basePos, 0.002);
             mouseVec.y = THREE.MathUtils.lerp(y1, basePos, 0.002);
