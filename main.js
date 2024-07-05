@@ -1,6 +1,5 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import GUI from "lil-gui";
 import CustomShaderMaterial from "three-custom-shader-material/vanilla";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
@@ -9,44 +8,47 @@ import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { FXAAShader } from "three/addons/shaders/FXAAShader.js";
 
 document.addEventListener("DOMContentLoaded", () => {
-    // create gui
-    const gui = new GUI({});
-    // create URLSearchParams object
+    const canvas = document.querySelector("#canvas");
     const guiObject = {
-        timeSpeed: 0.01,
+        timeSpeed: 0.0042,
         order: 2,
         degree: 4,
-        lineWidth: 1.9,
-        lineCount: 24,
+        lineWidth: 1,
+        lineCount: 23,
         lineMultiplier: 15,
         color2: "#000",
-        color1: "transparent",
+        color1: "#f8f6f3",
         easing: "linear",
         cameraType: "PerspectiveCamera",
-        radius: 1.2,
+        radius: 0.8,
         rotation: Math.PI / 2,
         offsetX: 0,
-        offsetY: 0,
+        offsetY: -79.4,
         enableMouse: 0,
+        cameraFov: 63,
     };
     // create basic scene
     let camera = null;
     const scene = new THREE.Scene();
     if (guiObject.cameraType === "OrthographicCamera") {
-        const aspect = window.innerWidth / window.innerHeight;
+        const aspect = canvas.offsetWidth / canvas.offsetHeight;
         camera = new THREE.OrthographicCamera(-2 * aspect, 2 * aspect, 2, -2, 0.1, 1000);
     }
     if (guiObject.cameraType === "PerspectiveCamera") {
-        camera = new THREE.PerspectiveCamera(53, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera = new THREE.PerspectiveCamera(
+            guiObject.cameraFov,
+            canvas.offsetWidth / canvas.offsetHeight,
+            0.1,
+            1000
+        );
     }
-    const canvas = document.querySelector("#canvas");
-    camera.position.z = 7.16;
+    camera.position.z = 3.16;
     const renderer = new THREE.WebGLRenderer({
         antialias: true,
         alpha: true,
         canvas: canvas,
     });
-    renderer.setSize(canvas.offsetWidth, canvas.offsetHeight);
+    renderer.setSize(canvas.offsetHeight, canvas.offsetHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setClearColor(new THREE.Color("transparent"));
 
@@ -55,11 +57,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const fxaaPass = new ShaderPass(FXAAShader);
     const outputPass = new OutputPass();
     const composer = new EffectComposer(renderer);
-    composer.setSize(canvas.offsetWidth, canvas.offsetHeight);
+    composer.setSize(canvas.offsetHeight, canvas.offsetHeight);
 
     const pixelRatio = window.devicePixelRatio;
     fxaaPass.material.uniforms["resolution"].value.x =
-        1 / (renderer.domElement.offsetWidth * pixelRatio);
+        1 / (renderer.domElement.offsetHeight * pixelRatio);
     fxaaPass.material.uniforms["resolution"].value.y =
         1 / (renderer.domElement.offsetHeight * pixelRatio);
 
@@ -93,7 +95,7 @@ document.addEventListener("DOMContentLoaded", () => {
     controls.minAzimuthAngle = orig[2];
     controls.maxAzimuthAngle = orig[3];
     controls.update();
-    // controls.enabled = false;
+    controls.enabled = false;
 
     const loader = new THREE.TextureLoader();
     const shText = loader.load("/sh03.png");
@@ -138,25 +140,16 @@ document.addEventListener("DOMContentLoaded", () => {
     plane.scale.set(1, 1, 0.01);
     scene.add(plane);
     camera.lookAt(plane.position);
-    // add circlular outline for sphere
-    const outlineMaterial = new THREE.MeshBasicMaterial({
-        color: new THREE.Color(guiObject.color2),
-        side: THREE.BackSide,
-    });
-    const outlineGeometry = new THREE.SphereGeometry(2, 64, 64);
-    const outline = new THREE.Mesh(outlineGeometry, outlineMaterial);
-    outline.scale.set(1.0075, 1.0075, 1.0075);
-    // scene.add(outline);
 
     // resize handling
     window.addEventListener(
         "resize",
         () => {
-            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setSize(canvas.offsetWidth, canvas.offsetHeight, false);
             // update uniforms
             plane.material.uniforms.uResolution.value = new THREE.Vector2(
-                window.innerWidth,
-                window.innerHeight
+                canvas.offsetWidth,
+                canvas.offsetHeight
             );
             if (camera instanceof THREE.OrthographicCamera) {
                 // set aspect ratio for orthographic camera
@@ -167,7 +160,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 camera.bottom = -2;
             }
             if (camera instanceof THREE.PerspectiveCamera) {
-                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.aspect = canvas.offsetWidth / canvas.offsetHeight;
             }
             camera.updateProjectionMatrix();
         },
@@ -199,116 +192,17 @@ document.addEventListener("DOMContentLoaded", () => {
         },
         false
     );
-    // return mouse to center rafer mouse leave
 
+    // return mouse to center rafer mouse leave
     const force = () => {
         const rafPos = mouseVec;
-        // if (rafPos.x < basePos || -rafPos.x > basePos) rafPos.x += (basePos - rafPos.x) * 0.01;
-        // if (rafPos.y < basePos || -rafPos.y > basePos) rafPos.y += (basePos - rafPos.y) * 0.01;
-
         rafPos.x = THREE.MathUtils.lerp(rafPos.x, basePos, 0.001);
         rafPos.y = THREE.MathUtils.lerp(rafPos.y, basePos, 0.001);
 
         plane.material.uniforms.uMouse.value = rafPos;
-        console.log(rafPos);
         window.requestAnimationFrame(force);
     };
     window.requestAnimationFrame(force);
-
-    // add gui
-    gui.add(guiObject, "timeSpeed", 0.001, 0.05).onChange(value => {
-        guiObject.timeSpeed = value;
-        plane.material.uniforms.uTime.value = 0;
-    });
-    gui.add(guiObject, "order", 1, 10)
-        .step(1)
-        .onChange(value => {
-            plane.material.uniforms.uOrder.value = value;
-        });
-    gui.add(guiObject, "lineWidth", 0.001, 5).onChange(value => {
-        plane.material.uniforms.uLineWidth.value = value;
-        outline.scale.set(1 + value * 0.006, 1 + value * 0.006, 1 + value * 0.006);
-    });
-    gui.add(guiObject, "degree", 1, 10)
-        .step(1)
-        .onChange(value => {
-            plane.material.uniforms.uDegree.value = value;
-        });
-    gui.add(guiObject, "lineCount", 1, 100)
-        .step(1)
-        .onChange(value => {
-            plane.material.uniforms.uLineCount.value = value;
-        });
-    gui.addColor(guiObject, "color1").onChange(value => {
-        plane.material.uniforms.uColor1.value = new THREE.Color(value);
-    });
-    gui.addColor(guiObject, "color2").onChange(value => {
-        plane.material.uniforms.uColor2.value = new THREE.Color(value);
-        outlineMaterial.color = new THREE.Color(value);
-    });
-    // add select with easing functions
-    gui.add(guiObject, "easing", ["linear", "sineIn"]).onChange(value => {
-        let easing = 1;
-        if (value === "linear") easing = 0;
-        if (value === "sineIn") easing = 4;
-
-        plane.material.uniforms.uEasing.value = easing;
-    });
-    gui.add(guiObject, "radius", 0.1, 5).onChange(value => {
-        plane.material.uniforms.uRadius.value = value;
-    });
-    gui.add(guiObject, "offsetX", 0, 100)
-        .step(0.01)
-        .onChange(value => {
-            plane.material.uniforms.uOffsetX.value = value;
-        });
-    gui.add(guiObject, "offsetY", -100, 100).onChange(value => {
-        plane.material.uniforms.uOffsetY.value = value;
-    });
-    // camera type
-    gui.add(guiObject, "cameraType", ["PerspectiveCamera", "OrthographicCamera"]).onChange(
-        value => {
-            if (value === "PerspectiveCamera") {
-                camera = new THREE.PerspectiveCamera(
-                    53,
-                    window.innerWidth / window.innerHeight,
-                    0.1,
-                    1000
-                );
-                camera.position.z = 6;
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-                controls.dispose();
-                controls = new OrbitControls(camera, renderer.domElement);
-                renderPass.camera = camera;
-            } else {
-                const aspect = window.innerWidth / window.innerHeight;
-                camera = new THREE.OrthographicCamera(-2 * aspect, 2 * aspect, 2, -2, 0.1, 1000);
-                camera.position.z = 6;
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-                controls.dispose();
-                controls = new OrbitControls(camera, renderer.domElement);
-                renderPass.camera = camera;
-            }
-        }
-    );
-
-    gui.add(guiObject, "enableMouse", 0, 1)
-        .step(1)
-        .onChange(value => {
-            plane.material.uniforms.uEnableMouse.value = value;
-        });
-
-    // camera fov
-    if (camera instanceof THREE.PerspectiveCamera)
-        gui.add(camera, "fov", 0, 180)
-            .name("Camera FOV")
-            .onChange(() => {
-                camera.updateProjectionMatrix();
-            });
-
-    gui.close();
 
     const render = () => {
         requestAnimationFrame(render);
